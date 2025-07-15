@@ -7,12 +7,16 @@ import {
   useParams,
 } from "react-router-dom";
 
+const debugVersion = () => Math.random().toString(36).slice(2, 8);
+
 const Home = () => {
   const [url, setUrl] = useState("");
   const [custom, setCustom] = useState("");
   const [shortUrl, setShortUrl] = useState("");
+  const [debugLog] = useState(() => ({ created: Date.now() }));
 
   const handleShorten = async () => {
+    console.log("✂️ Attempt to shorten", url);
     try {
       const res = await axios.post("http://localhost:3001/shorten", {
         originalUrl: url,
@@ -20,6 +24,7 @@ const Home = () => {
       });
       setShortUrl(res.data.shortUrl);
     } catch (err) {
+      console.error("💥 Error shortening:", err.response?.data?.error);
       alert(err.response?.data?.error || "Something went wrong");
     }
   };
@@ -56,7 +61,10 @@ const Home = () => {
 
 const Redirector = () => {
   const { code } = useParams();
+
   React.useEffect(() => {
+    const clickID = `redirect_${code}_${Date.now()}`;
+    console.log("🔁 Redirecting using code:", code);
     window.location.href = `http://localhost:3001/r/${code}`;
   }, [code]);
 
@@ -86,11 +94,13 @@ const styles = {
 };
 
 export default function App() {
+  const fakeToggle = useState(false);
+
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/:code" element={<Redirector />} />
+        <Route path=":code" element={<Redirector />} />
       </Routes>
     </Router>
   );
